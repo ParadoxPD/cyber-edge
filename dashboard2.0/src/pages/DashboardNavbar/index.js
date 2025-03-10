@@ -56,7 +56,7 @@ import {
   setOpenConfigurator,
 } from "context";
 
-function DashboardNavbar({ absolute, light, isMini, setSearch }) {
+function DashboardNavbar({ absolute, light, isMini, setSearch, name }) {
 
   const [controller, dispatch] = useMaterialUIController();
   const { miniSidenav, transparentNavbar, fixedNavbar, openConfigurator, darkMode } = controller;
@@ -110,7 +110,7 @@ function DashboardNavbar({ absolute, light, isMini, setSearch }) {
       <Toolbar sx={(theme) => navbarContainer(theme)}>
         <MDBox color="inherit" mb={{ xs: 1, md: 0 }} sx={(theme) => navbarRow(theme, { isMini })}>
           <Typography color="white" variant="h5" component="div" sx={{ marginLeft: "0.6rem" }}>
-            Dashboard
+            {name}
           </Typography>
         </MDBox>
         {isMini ? null : (

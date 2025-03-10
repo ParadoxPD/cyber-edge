@@ -61,7 +61,26 @@ const Login = () => {
       </MDBox>
 
       <BasicLayout image={bgImage}>
-        <Card sx={{ backdropFilter: "blur(80px)", background: "transparent" }}>
+        <Card
+          sx={{
+            backdropFilter: "blur(80px)",
+            background: "transparent",
+            display: "flex",
+            paddingLeft: "1rem",
+            paddingRight: "1rem",
+            // alignContent: "flex-start",
+            // justifyContent: "flex-start",
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            width: "30%",
+            minWidth: "400px",
+            // height: "80%",
+            // overflowY: "auto",
+            flexWrap: "wrap",
+            transform: "translate(-50%,-50%)",
+          }}
+        >
           <MDBox
             variant="gradient"
             bgColor="info"

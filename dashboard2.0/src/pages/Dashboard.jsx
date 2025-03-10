@@ -60,8 +60,8 @@ const Dashboard = () => {
   console.log(search);
 
   return (
-    <BasicLayout image={bgImage} sx={{ width: "auto", overflow: "hidden" }}>
-      <DashboardNavbar setSearch={setSearch} />
+    <BasicLayout image={bgImage}>
+      <DashboardNavbar setSearch={setSearch} name="Dashboard" />
       <MDBox
         sx={{
           display: "flex",
@@ -70,7 +70,7 @@ const Dashboard = () => {
           position: "absolute",
           top: "15%",
           left: "5%",
-          height: "80%",
+          height: "85%",
           overflowY: "auto",
           flexWrap: "wrap",
         }}
@@ -164,16 +164,21 @@ const Dashboard = () => {
                   title="green iguana"
                 />
                 <CardContent>
-                  <Typography gutterBottom variant="h5" component="div">
+                  <Typography
+                    gutterBottom
+                    variant="h5"
+                    component="div"
+                    sx={{ color: "#ffffff" }}
+                  >
                     {server.name}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: "text.primary" }}>
+                  <Typography variant="body2" sx={{ color: "#ffffff" }}>
                     OS Type :
                     {server.os_type ? server.os_type : "Windows Maybe?"}
                   </Typography>
                   <Typography
                     variant="body2"
-                    sx={{ color: "text.secondary", marginTop: "0.3rem" }}
+                    sx={{ color: "#ffffffaa", marginTop: "0.3rem" }}
                   >
                     IP : {server.ip_address ? server.ip_address : "192.168.1.1"}
                   </Typography>
@@ -279,7 +284,9 @@ const Dashboard = () => {
                       // localStorage.setItem("token", res.data.token);
                       // navigate("/dashboard");
                       setOpen(false);
-                      window.location.reload();
+
+                      console.log(res.data.server_key);
+                      // window.location.reload();
                     } catch (error) {
                       alert("Server Dead I guess");
                     }
