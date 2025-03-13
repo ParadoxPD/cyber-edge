@@ -20,17 +20,22 @@ const db = new sqlite3.Database("security_data.db", (err) => {
     console.error(err.message);
   } else {
     console.log("Connected to SQLite database.");
+
     db.run(`CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE,
       password TEXT
     )`);
+    
     db.run(`CREATE TABLE IF NOT EXISTS guest_servers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      server_key TEXT,
       name TEXT,
       os_type TEXT,
+
       ip_address TEXT
     )`);
+    
     db.run(`CREATE TABLE IF NOT EXISTS reports (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       server_id INTEGER,
@@ -77,7 +82,9 @@ app.post("/login", async (req, res) => {
 
 // Middleware for Authentication
 const authenticateToken = (req, res, next) => {
+
   const token = req.headers["authorization"];
+  console.log(token);
   if (!token) return res.status(401).json({ error: "Unauthorized" });
 
   jwt.verify(token.split(" ")[1], SECRET_KEY, (err, user) => {
@@ -87,16 +94,56 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Add a Guest Server
-app.post("/guest-servers", authenticateToken, (req, res) => {
-  const { name, os_type, ip_address } = req.body;
+const authenticateServer = (req, res, next) => {
 
-  db.run("INSERT INTO guest_servers (name, os_type, ip_address) VALUES (?, ?, ?)", [name, os_type, ip_address], function (err) {
+  const server_key = req.headers["server_key"];
+  console.log(server_key);
+  if (!server_key) return res.status(401).json({ error: "Unauthorized" });
+
+  if (server_key.split(" ")[1] === "12345678") {
+    next();
+  }else{
+
+    return res.status(403).json({ error: "Forbidden" });
+  }
+};
+
+const generateServerKey = (name,os_type,ip_address) =>{
+  const server_key = jwt.sign({ name:name,os_type:os_type,ip_address:ip_address }, SECRET_KEY, { expiresIn: `${60 * 60 * 24 * 365 * 100}h` });
+  return server_key;
+}
+
+
+app.delete("/guest-servers", authenticateToken, (req, res) => {
+  console.log(req.body);
+  const { server_id } = req.body;
+  console.log(server_id);
+
+  db.run("DELETE FROM guest_servers WHERE id = ?", [server_id], function (err) {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
     res.json({ message: "Guest server added successfully", id: this.lastID });
   });
+
+  console.log("Added Server");
+});
+
+// Add a Guest Server
+app.post("/guest-servers", authenticateToken, (req, res) => {
+  console.log(req.body);
+  const { name, os_type, ip_address } = req.body;
+  const server_key = generateServerKey(name,os_type,ip_address);
+  console.log(os_type);
+
+  db.run("INSERT INTO guest_servers (name, os_type, server_key, ip_address) VALUES (?, ?, ?, ?)", [name, os_type, server_key, ip_address], function (err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ message: "Guest server added successfully", id: this.lastID, server_key:server_key });
+  });
+
+  console.log("Added Server");
 });
 
 // Get All Guest Servers
@@ -113,16 +160,20 @@ app.get("/guest-servers", authenticateToken, (req, res) => {
 // Get Reports for a Specific Server
 app.get("/reports/:server_id", authenticateToken, (req, res) => {
 	console.log("Fetching servers...");
-  db.all("SELECT * FROM reports WHERE server_id = ? ORDER BY timestamp DESC", [req.params.server_id], (err, rows) => {
+  db.all("SELECT r.*,s.name FROM reports r, guest_servers s WHERE r.server_id=s.id AND server_id = ? ORDER BY timestamp DESC", [req.params.server_id], (err, rows) => {
+    if(rows)
+    console.log(rows.length)
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json(rows);
+    res.json(
+      rows
+    );
   });
 });
 
 // API to receive reports
-app.post("/report", authenticateToken, (req, res) => {
+app.post("/report", authenticateServer, (req, res) => {
   const {
     server_id,
     open_ports,
