@@ -19,14 +19,26 @@ const ReportPage = () => {
 
   useEffect(() => {
     const fetchReport = async () => {
-      const res = await axios.get(
+      const reports_data = await axios.get(
         `http://${Constants.SERVER_IP}:${Constants.SERVER_PORT}/reports/${id}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
-      console.log(res);
-      setReports(res.data);
+
+      const hardening_reports = await axios.get(
+        `http://${Constants.SERVER_IP}:${Constants.SERVER_PORT}/hardening-reports/${id}`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
+
+      const result = {
+        data: reports_data.data,
+        hardening_reports: hardening_reports.data.hardening_reports,
+      };
+      console.log(result);
+      setReports(result);
     };
     fetchReport();
   }, [id]);
@@ -58,7 +70,7 @@ const ReportPage = () => {
           flexWrap: "wrap",
         }}
       >
-        {reports.length > 0 ? (
+        {reports.data.length > 0 ? (
           <>
             <Typography
               gutterBottom
@@ -66,9 +78,9 @@ const ReportPage = () => {
               component="div"
               sx={{ color: "#ffffff" }}
             >
-              Security Report for {reports[0].name}
+              Security Report for {reports.data[0].name}
             </Typography>
-            {reports.map((report, idx) => (
+            {reports.data.map((report, idx) => (
               <div key={idx}>
                 <div className="grid md:grid-cols-2 gap-6 mt-4">
                   {[
@@ -86,10 +98,10 @@ const ReportPage = () => {
                       label: "Password Strength",
                       value: report.password_strength,
                     },
-                    {
-                      label: "Third-Party Software",
-                      value: report.third_party_software,
-                    },
+                    // {
+                    //   label: "Third-Party Software",
+                    //   value: report.third_party_software,
+                    // },
                     {
                       label: "Plaintext Passwords",
                       value: report.plaintext_passwords,
@@ -106,12 +118,26 @@ const ReportPage = () => {
                     </div>
                   ))}
                 </div>
-                <h2 className="text-xl font-semibold mt-6">Hardening Report</h2>
+                <ul className="space-y-2">
+                  {reports.hardening_reports.map((report, index) => (
+                    <li key={index}>
+                      <a
+                        href={`http://${Constants.SERVER_IP}:${Constants.SERVER_PORT}/view-report/${report}`}
+                        className="text-blue-400 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {report}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+                {/* <h2 className="text-xl font-semibold mt-6">Hardening Report</h2>
                 <div className="mt-2 p-4 bg-gray-800 rounded-lg">
                   <pre className="whitespace-pre-wrap">
                     {report.hardening_report}
                   </pre>
-                </div>
+                </div> */}
               </div>
             ))}
           </>

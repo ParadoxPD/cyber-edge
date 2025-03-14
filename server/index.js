@@ -1,6 +1,7 @@
 // server/index.js (Node.js Backend with Authentication & Guest Server Management)
 const multer = require("multer");
-
+const fs = require("fs");
+const path = require("path");
 
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
@@ -52,7 +53,7 @@ const db = new sqlite3.Database("security_data.db", (err) => {
       password_strength TEXT,
       third_party_software TEXT,
       plaintext_passwords TEXT,
-      hardening_report TEXT,
+      hardening_report_filename TEXT,
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(server_id) REFERENCES guest_servers(id)
     )`);
@@ -199,6 +200,35 @@ app.get("/reports/:server_id", authenticateToken, (req, res) => {
   });
 });
 
+// Get Hardening Reports for a Specific Server
+app.get("/hardening-reports/:server_id", authenticateToken, (req, res) => {
+  console.log("Fetching servers...");
+  db.all("SELECT r.hardening_report_filename FROM reports r, guest_servers s WHERE r.server_id=s.id AND server_id = ? ORDER BY timestamp DESC", [req.params.server_id], (err, rows) => {
+    if (rows)
+      console.log(rows.length)
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(
+      { "hardening_reports": rows.map((row) => { return row.hardening_report_filename; }) }
+    );
+  });
+});
+
+
+app.get("/view-report/:filename", (req, res) => {
+  const reportPath = path.join(__dirname, uploadsPath, req.params.filename);
+
+  // Check if file exists
+  if (!fs.existsSync(reportPath)) {
+    return res.status(404).send("Report not found");
+  }
+
+  res.sendFile(reportPath);
+});
+
+
+
 // API to receive reports
 app.post("/report", authenticateServer, file_store.single("hardening_report"), (req, res) => {
   // console.log("DAta", req.body);
@@ -211,15 +241,17 @@ app.post("/report", authenticateServer, file_store.single("hardening_report"), (
     password_strength,
     third_party_software,
     plaintext_passwords,
-    hardening_report_filename
   } = req.body;
+
+  const hardening_report_filename = req.file.filename;
 
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
   }
+
   db.run(
     `INSERT INTO reports (
-      server_id, open_ports, patch_status, antivirus_status, encryption_status, password_strength, third_party_software, plaintext_passwords, hardening_report
+      server_id, open_ports, patch_status, antivirus_status, encryption_status, password_strength, third_party_software, plaintext_passwords, hardening_report_filename
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       server_id,
@@ -236,7 +268,7 @@ app.post("/report", authenticateServer, file_store.single("hardening_report"), (
       if (err) {
         return res.status(500).json({ error: err.message });
       }
-      res.json({ message: "Report stored successfully", id: this.lastID, filename: req.file.filename });
+      res.json({ message: "Report stored successfully", id: this.lastID, filename: hardening_report_filename });
     }
   );
 });
