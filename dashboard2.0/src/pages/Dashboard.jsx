@@ -32,7 +32,9 @@ import { position } from "stylis";
 const Dashboard = () => {
   const [servers, setServers] = useState([]);
   const [search, setSearch] = useState("");
+  const [script, setScript] = useState("");
   const [open, setOpen] = useState(false);
+  const [openScript, setOpenScript] = useState(false);
   const [name, setName] = useState("");
   const [osType, setOSType] = useState("");
   const [ipAddr, setIP] = useState("");
@@ -285,14 +287,78 @@ const Dashboard = () => {
                       // navigate("/dashboard");
                       setOpen(false);
 
+                      setScript(
+                        `curl -fsSL https://raw.githubusercontent.com/ParadoxPD/cyber-edge/refs/heads/main/GuestAgent/install_ga.sh | sh -s ${res.data.id} ${res.data.server_key}`
+                      );
                       console.log(res.data.server_key);
+                      console.log(res.data.id);
+                      setOpenScript(true);
                       // window.location.reload();
                     } catch (error) {
-                      alert("Server Dead I guess");
+                      alert("Server Dead I guess", error);
                     }
                   }}
                 >
                   Add
+                </MDButton>
+              </MDBox>
+            </MDBox>
+          </MDBox>
+        </MDBox>
+      </Modal>
+      <Modal
+        open={openScript}
+        onClose={() => {
+          setOpenScript(false);
+        }}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <MDBox
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "80%",
+            backdropFilter: "blur(60px)",
+            background: "transparent",
+            p: 4,
+          }}
+        >
+          <MDBox pt={4} pb={3} px={3}>
+            <MDBox component="form" role="form">
+              <MDBox mb={2}>
+                <Typography variant="h5" sx={{ color: "#ffffffaa" }}>
+                  Copy this command and run it on your guest machine
+                </Typography>
+              </MDBox>
+              <MDBox mb={2}>
+                <MDInput
+                  type="text"
+                  label="command"
+                  fullWidth
+                  // disabled
+                  value={script}
+                  onClick={(e) => {
+                    // console.log(e);
+                    e.target.select();
+                  }}
+                />
+              </MDBox>
+              <MDBox mt={4} mb={1}>
+                <MDButton
+                  variant="gradient"
+                  type="submit"
+                  color="info"
+                  fullWidth
+                  onClick={(e) => {
+                    setOpen(false);
+                    setOpenScript(false);
+                    window.location.reload();
+                  }}
+                >
+                  Close
                 </MDButton>
               </MDBox>
             </MDBox>

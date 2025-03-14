@@ -159,7 +159,20 @@ const ReportPage = () => {
               No reports found.
             </Typography>
           ) : (
-            <MDBox>
+            <MDBox
+              sx={{
+                display: "flex",
+                alignContent: "flex-start",
+                justifyContent: "flex-start",
+                position: "absolute",
+                top: "10%",
+                left: "5%",
+                height: "90%",
+                width: "90%",
+                overflowY: "auto",
+                flexWrap: "wrap",
+              }}
+            >
               {reports.data
                 .filter((report, index) =>
                   (`Report ${index + 1}` + formatTimestamp(report.timestamp))
@@ -178,7 +191,7 @@ const ReportPage = () => {
                       marginLeft: "20px",
                       position: "relative",
                       // display: "flex",
-                      // width: 300,
+                      width: 300,
                       // height: 345,
                       transition: "all 0.2s ease-in",
                       ":hover": {
@@ -201,9 +214,24 @@ const ReportPage = () => {
                           {formatTimestamp(report.timestamp)}
                         </Typography>
 
-                        <Box mt={2}>
+                        <MDBox mt={2}>
+                          <MDBox>
+                            <Typography variant="body1" color="White">
+                              Open Ports
+                            </Typography>
+                            {report.open_ports.map((elem, i) => {
+                              return (
+                                <Typography
+                                  variant="body2"
+                                  color="white"
+                                  key={i}
+                                >
+                                  {elem}
+                                </Typography>
+                              );
+                            })}
+                          </MDBox>
                           {[
-                            { label: "Open Ports", value: report.open_ports },
                             {
                               label: "Patch Status",
                               value: report.patch_status,
@@ -233,7 +261,7 @@ const ReportPage = () => {
                               <strong>{item.label}:</strong> {item.value}
                             </Typography>
                           ))}
-                        </Box>
+                        </MDBox>
 
                         <Typography
                           variant="body1"
