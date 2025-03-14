@@ -1,9 +1,11 @@
 // server/index.js (Node.js Backend with Authentication & Guest Server Management)
+const multer = require("multer");
+
 
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
 const cors = require("cors");
-const bodyParser = require("body-parser");
+// const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -12,7 +14,11 @@ const port = 5000;
 const SECRET_KEY = "your_secret_key"; // Change this in production
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+// app.use(bodyParser.json({ limit: "50mb" })); // Adjust as needed
+// app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
+
 
 // Database setup
 const db = new sqlite3.Database("security_data.db", (err) => {
@@ -26,7 +32,7 @@ const db = new sqlite3.Database("security_data.db", (err) => {
       username TEXT UNIQUE,
       password TEXT
     )`);
-    
+
     db.run(`CREATE TABLE IF NOT EXISTS guest_servers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       server_key TEXT,
@@ -35,7 +41,7 @@ const db = new sqlite3.Database("security_data.db", (err) => {
 
       ip_address TEXT
     )`);
-    
+
     db.run(`CREATE TABLE IF NOT EXISTS reports (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       server_id INTEGER,
@@ -53,6 +59,27 @@ const db = new sqlite3.Database("security_data.db", (err) => {
   }
 });
 
+
+const uploadsPath = "./hardening_reports";
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsPath); // Ensure this folder exists
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + req.body.hardening_report_filename);
+  }
+});
+
+const file_store = multer({ storage: storage, limits: { fileSize: 50 * 1024 * 1024 } });
+
+// app.post("/upload", upload.single("file"), (req, res) => {
+//   if (!req.file) {
+//     return res.status(400).json({ error: "No file uploaded" });
+//   }
+//   res.json({ message: "File uploaded successfully", filePath: req.file.path });
+// });
+
 // User Registration
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
@@ -69,7 +96,7 @@ app.post("/register", async (req, res) => {
 // User Login
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
-	console.log(username,password);
+  console.log(username, password);
 
   db.get("SELECT * FROM users WHERE username = ?", [username], async (err, user) => {
     if (err || !user || !(await bcrypt.compare(password, user.password))) {
@@ -102,14 +129,14 @@ const authenticateServer = (req, res, next) => {
 
   if (server_key.split(" ")[1] === "12345678") {
     next();
-  }else{
+  } else {
 
     return res.status(403).json({ error: "Forbidden" });
   }
 };
 
-const generateServerKey = (name,os_type,ip_address) =>{
-  const server_key = jwt.sign({ name:name,os_type:os_type,ip_address:ip_address }, SECRET_KEY, { expiresIn: `${60 * 60 * 24 * 365 * 100}h` });
+const generateServerKey = (name, os_type, ip_address) => {
+  const server_key = jwt.sign({ name: name, os_type: os_type, ip_address: ip_address }, SECRET_KEY, { expiresIn: `${60 * 60 * 24 * 365 * 100}h` });
   return server_key;
 }
 
@@ -133,14 +160,14 @@ app.delete("/guest-servers", authenticateToken, (req, res) => {
 app.post("/guest-servers", authenticateToken, (req, res) => {
   console.log(req.body);
   const { name, os_type, ip_address } = req.body;
-  const server_key = generateServerKey(name,os_type,ip_address);
+  const server_key = generateServerKey(name, os_type, ip_address);
   console.log(os_type);
 
   db.run("INSERT INTO guest_servers (name, os_type, server_key, ip_address) VALUES (?, ?, ?, ?)", [name, os_type, server_key, ip_address], function (err) {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    res.json({ message: "Guest server added successfully", id: this.lastID, server_key:server_key });
+    res.json({ message: "Guest server added successfully", id: this.lastID, server_key: server_key });
   });
 
   console.log("Added Server");
@@ -148,7 +175,7 @@ app.post("/guest-servers", authenticateToken, (req, res) => {
 
 // Get All Guest Servers
 app.get("/guest-servers", authenticateToken, (req, res) => {
-	console.log("Fetching servers...");
+  console.log("Fetching servers...");
   db.all("SELECT * FROM guest_servers", [], (err, rows) => {
     if (err) {
       return res.status(500).json({ error: err.message });
@@ -159,10 +186,10 @@ app.get("/guest-servers", authenticateToken, (req, res) => {
 
 // Get Reports for a Specific Server
 app.get("/reports/:server_id", authenticateToken, (req, res) => {
-	console.log("Fetching servers...");
+  console.log("Fetching servers...");
   db.all("SELECT r.*,s.name FROM reports r, guest_servers s WHERE r.server_id=s.id AND server_id = ? ORDER BY timestamp DESC", [req.params.server_id], (err, rows) => {
-    if(rows)
-    console.log(rows.length)
+    if (rows)
+      console.log(rows.length)
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -173,7 +200,8 @@ app.get("/reports/:server_id", authenticateToken, (req, res) => {
 });
 
 // API to receive reports
-app.post("/report", authenticateServer, (req, res) => {
+app.post("/report", authenticateServer, file_store.single("hardening_report"), (req, res) => {
+  // console.log("DAta", req.body);
   const {
     server_id,
     open_ports,
@@ -183,9 +211,12 @@ app.post("/report", authenticateServer, (req, res) => {
     password_strength,
     third_party_software,
     plaintext_passwords,
-    hardening_report,
+    hardening_report_filename
   } = req.body;
 
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
   db.run(
     `INSERT INTO reports (
       server_id, open_ports, patch_status, antivirus_status, encryption_status, password_strength, third_party_software, plaintext_passwords, hardening_report
@@ -199,13 +230,13 @@ app.post("/report", authenticateServer, (req, res) => {
       password_strength,
       third_party_software,
       plaintext_passwords,
-      hardening_report,
+      hardening_report_filename,
     ],
     function (err) {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
-      res.json({ message: "Report stored successfully", id: this.lastID });
+      res.json({ message: "Report stored successfully", id: this.lastID, filename: req.file.filename });
     }
   );
 });
