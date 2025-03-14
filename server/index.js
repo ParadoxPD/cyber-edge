@@ -9,8 +9,10 @@ const cors = require("cors");
 // const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { default: guest_agent_template } = require("./guest_agent_template");
 
 const app = express();
+const ip = "192.168.1.37";
 const port = 5000;
 const SECRET_KEY = "your_secret_key"; // Change this in production
 
@@ -188,7 +190,7 @@ app.get("/guest-servers", authenticateToken, (req, res) => {
 // Get Reports for a Specific Server
 app.get("/reports/:server_id", authenticateToken, (req, res) => {
   console.log("Fetching servers...");
-  db.all("SELECT r.*,s.name FROM reports r, guest_servers s WHERE r.server_id=s.id AND server_id = ? ORDER BY timestamp DESC", [req.params.server_id], (err, rows) => {
+  db.all("SELECT r.*,s.name FROM reports r, guest_servers s WHERE r.server_id=s.id AND server_id = ? ORDER BY timestamp DESC LIMIT 10", [req.params.server_id], (err, rows) => {
     if (rows)
       console.log(rows.length)
     if (err) {
@@ -199,6 +201,35 @@ app.get("/reports/:server_id", authenticateToken, (req, res) => {
     );
   });
 });
+
+
+
+// Get Reports for a Specific Server
+app.get("/get-guest-agent", (req, res) => {
+  console.log(req.query)
+  const template = guest_agent_template(`${ip}:${port}`, req.query.key, req.query.server_id);
+  console.log(template);
+  console.log("Fetching agent file...");
+  // Define file path
+  const filePath = path.join(__dirname, "/tmp/guest_agent.py");
+
+  // Write script to a temporary file
+  fs.writeFileSync(filePath, template);
+
+  // Send file as response
+  res.download(filePath, "guest_agent.py", (err) => {
+    if (err) {
+      console.error("Error sending file:", err);
+      res.status(500).send("Error generating guest agent.");
+    }
+
+    // Optional: Delete file after sending (to keep it temporary)
+    setTimeout(() => fs.unlinkSync(filePath), 5000);
+  });
+});
+
+
+
 
 // Get Hardening Reports for a Specific Server
 app.get("/hardening-reports/:server_id", authenticateToken, (req, res) => {

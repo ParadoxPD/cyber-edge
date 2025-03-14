@@ -161,7 +161,7 @@ const Dashboard = () => {
                 <CardMedia
                   sx={{ height: 140 }}
                   image="https://linuxiac.b-cdn.net/wp-content/uploads/2020/06/ubuntu-linux.jpg"
-                  title="green iguana"
+                  title="Linux"
                 />
                 <CardContent>
                   <Typography
