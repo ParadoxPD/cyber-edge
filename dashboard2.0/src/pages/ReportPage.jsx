@@ -159,7 +159,7 @@ const ReportPage = () => {
               No reports found.
             </Typography>
           ) : (
-            <Grid container spacing={3}>
+            <MDBox>
               {reports.data
                 .filter((report, index) =>
                   (`Report ${index + 1}` + formatTimestamp(report.timestamp))
@@ -167,88 +167,90 @@ const ReportPage = () => {
                     .includes(search)
                 )
                 .map((report, index) => (
-                  <Grid item xs={12} sm={6} md={4} key={index}>
-                    <Card
-                      sx={{
-                        backdropFilter: "blur(200px)",
-                        background: "transparent",
-                        marginRight: "30px",
-                        marginBottom: "20px",
-                        position: "relative",
-                        // display: "flex",
-                        // width: 300,
-                        // height: 345,
-                        transition: "all 0.2s ease-in",
-                        ":hover": {
-                          cursor: "pointer",
-                          transform: "scale(1.02)",
-                          boxShadow: 8,
-                        },
-                      }}
+                  // <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Card
+                    key={index}
+                    sx={{
+                      backdropFilter: "blur(200px)",
+                      background: "transparent",
+                      marginRight: "30px",
+                      marginBottom: "20px",
+                      marginLeft: "20px",
+                      position: "relative",
+                      // display: "flex",
+                      // width: 300,
+                      // height: 345,
+                      transition: "all 0.2s ease-in",
+                      ":hover": {
+                        cursor: "pointer",
+                        transform: "scale(1.02)",
+                        boxShadow: 8,
+                      },
+                    }}
+                  >
+                    <CardActionArea
+                      component={Link}
+                      target="_blank"
+                      to={`http://${Constants.SERVER_IP}:${Constants.SERVER_PORT}/view-report/${report.hardening_report_filename}`}
                     >
-                      <CardActionArea
-                        component={Link}
-                        target="_blank"
-                        to={`http://${Constants.SERVER_IP}:${Constants.SERVER_PORT}/view-report/${report.hardening_report_filename}`}
-                      >
-                        <CardContent>
-                          <Typography variant="h5" sx={{ color: "#ffffffaa" }}>
-                            Report {index + 1}
-                          </Typography>
-                          <Typography variant="body2" color="gray">
-                            {formatTimestamp(report.timestamp)}
-                          </Typography>
+                      <CardContent>
+                        <Typography variant="h5" sx={{ color: "#ffffffaa" }}>
+                          Report {index + 1}
+                        </Typography>
+                        <Typography variant="body2" color="gray">
+                          {formatTimestamp(report.timestamp)}
+                        </Typography>
 
-                          <Box mt={2}>
-                            {[
-                              { label: "Open Ports", value: report.open_ports },
-                              {
-                                label: "Patch Status",
-                                value: report.patch_status,
-                              },
-                              {
-                                label: "Antivirus Status",
-                                value: report.antivirus_status,
-                              },
-                              {
-                                label: "Encryption Status",
-                                value: report.encryption_status,
-                              },
-                              {
-                                label: "Password Strength",
-                                value: report.password_strength,
-                              },
-                              {
-                                label: "Plaintext Passwords",
-                                value: report.plaintext_passwords,
-                              },
-                            ].map((item, i) => (
-                              <Typography
-                                key={i}
-                                variant="body2"
-                                color="lightgray"
-                              >
-                                <strong>{item.label}:</strong> {item.value}
-                              </Typography>
-                            ))}
-                          </Box>
+                        <Box mt={2}>
+                          {[
+                            { label: "Open Ports", value: report.open_ports },
+                            {
+                              label: "Patch Status",
+                              value: report.patch_status,
+                            },
+                            {
+                              label: "Antivirus Status",
+                              value: report.antivirus_status,
+                            },
+                            {
+                              label: "Encryption Status",
+                              value: report.encryption_status,
+                            },
+                            {
+                              label: "Password Strength",
+                              value: report.password_strength,
+                            },
+                            {
+                              label: "Plaintext Passwords",
+                              value: report.plaintext_passwords,
+                            },
+                          ].map((item, i) => (
+                            <Typography
+                              key={i}
+                              variant="body2"
+                              color="lightgray"
+                            >
+                              <strong>{item.label}:</strong> {item.value}
+                            </Typography>
+                          ))}
+                        </Box>
 
-                          <Typography
-                            variant="body1"
-                            sx={{
-                              marginTop: 2,
-                              fontSize: "0.9rem",
-                              color: "#4CAF50",
-                            }}
-                          >
-                            Click to view Hardening report
-                          </Typography>
-                        </CardContent>
-                      </CardActionArea>
-                    </Card>
-                  </Grid>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            marginTop: 2,
+                            fontSize: "0.9rem",
+                            color: "#4CAF50",
+                          }}
+                        >
+                          Click to view Hardening report
+                        </Typography>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                  // </Grid>
                 ))}
-            </Grid>
+            </MDBox>
           )}
         </MDBox>
       </MDBox>

@@ -127,7 +127,7 @@ response = requests.post(
     headers=headers,
 )
 
-
+print("Report sent. Server response:", response.text)
 
 `;
 
