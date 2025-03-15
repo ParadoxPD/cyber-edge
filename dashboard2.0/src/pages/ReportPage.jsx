@@ -10,6 +10,8 @@ import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router-dom";
+import Modal from "@mui/material/Modal";
+import FmdBadIcon from "@mui/icons-material/FmdBad";
 import {
   Container,
   Grid,
@@ -25,6 +27,18 @@ const ReportPage = () => {
   const [reports, setReports] = useState(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [openPortModal, setOpenPortModal] = useState({
+    state: false,
+    content: "",
+  });
+  const [openPatchModal, setOpenPatchModal] = useState({
+    state: false,
+    content: "",
+  });
+  const [openSoftwareModal, setOpenSoftwareModal] = useState({
+    state: false,
+    content: "",
+  });
 
   const id = serverId;
   console.log(id);
@@ -123,15 +137,255 @@ const ReportPage = () => {
 
   const statusColor = (status) => {
     if (status.includes("Up to date") || status.includes("Secure"))
-      return "bg-green-500";
+      return "green";
     if (status.includes("Warning") || status.includes("Updates Available"))
-      return "bg-yellow-500";
-    return "bg-red-500";
+      return "yellow";
+    return "red";
   };
+
+  console.log(openPortModal.content);
 
   return (
     <BasicLayout image={bgImage}>
       <DashboardNavbar setSearch={setSearch} name="Reports" />
+      <Modal
+        open={openPortModal.state}
+        onClose={() => {
+          setOpenPortModal({ state: false, content: openPortModal.content });
+        }}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <MDBox
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "80%",
+            backdropFilter: "blur(60px)",
+            background: "transparent",
+            p: 4,
+          }}
+        >
+          <MDBox pt={4} pb={3} px={3}>
+            <MDBox component="form" role="form">
+              <MDBox mb={2}>
+                <Typography
+                  variant="h3"
+                  color="White"
+                  sx={{ textAlign: "center" }}
+                >
+                  Open Ports
+                </Typography>
+              </MDBox>
+              <MDBox mb={2} sx={{ overflowY: "scroll", height: "28vh" }}>
+                {openPortModal.content.length == 0
+                  ? null
+                  : openPortModal.content.map((elem, i) => {
+                      return (
+                        <Typography
+                          variant="body1"
+                          color="White"
+                          key={i}
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            width: "80%",
+                          }}
+                        >
+                          {elem.split(" ").map((col) => {
+                            return (
+                              <Typography
+                                variant="body1"
+                                color="White"
+                                key={i}
+                                sx={{}}
+                              >
+                                {col}
+                              </Typography>
+                            );
+                          })}
+                        </Typography>
+                      );
+                    })}
+              </MDBox>
+              <MDBox mt={4} mb={1}>
+                <MDButton
+                  variant="gradient"
+                  // type="submit"
+                  color="info"
+                  fullWidth
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setOpenPortModal({ state: false, content: "" });
+                  }}
+                >
+                  Close
+                </MDButton>
+              </MDBox>
+            </MDBox>
+          </MDBox>
+        </MDBox>
+      </Modal>
+
+      <Modal
+        open={openPatchModal.state}
+        onClose={() => {
+          setOpenPatchModal({ state: false, content: openPatchModal.content });
+        }}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <MDBox
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "80%",
+            backdropFilter: "blur(60px)",
+            background: "transparent",
+            p: 4,
+          }}
+        >
+          <MDBox pt={4} pb={3} px={3}>
+            <MDBox component="form" role="form">
+              <MDBox mb={2}>
+                <Typography
+                  variant="h3"
+                  color="White"
+                  sx={{ textAlign: "center" }}
+                >
+                  Patch Status
+                </Typography>
+              </MDBox>
+              <MDBox>
+                <MDBox
+                  mb={2}
+                  sx={{
+                    // overflowY: "auto",
+                    display: "flex",
+                    // width: "50%",
+                    // height: "200px",
+                    marginLeft: "20px",
+                  }}
+                >
+                  <FmdBadIcon
+                    sx={{
+                      fill: statusColor(openPatchModal.content),
+                      transform: "scale(2)",
+                    }}
+                  />
+                  {/* statusColor(openPatchModal.content) */}
+                  <Typography
+                    variant="body1"
+                    color="White"
+                    sx={{
+                      marginLeft: "20px",
+                    }}
+                  >
+                    {openPatchModal.content}
+                  </Typography>
+                </MDBox>
+                {!openPatchModal.content.includes("Available") ? null : (
+                  <MDInput
+                    type="text"
+                    // label="command"
+                    fullWidth
+                    // disabled
+                    value={"Run sudo apt update && sudo apt upgrade -y"}
+                    onClick={(e) => {
+                      // console.log(e);
+                      e.target.select();
+                    }}
+                  />
+                )}
+              </MDBox>
+              <MDBox mt={4} mb={1}>
+                <MDButton
+                  variant="gradient"
+                  // type="submit"
+                  color="info"
+                  fullWidth
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setOpenPatchModal({ state: false, content: "" });
+                  }}
+                >
+                  Close
+                </MDButton>
+              </MDBox>
+            </MDBox>
+          </MDBox>
+        </MDBox>
+      </Modal>
+
+      <Modal
+        open={openSoftwareModal.state}
+        onClose={() => {
+          setOpenSoftwareModal({
+            state: false,
+            content: openSoftwareModal.content,
+          });
+        }}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <MDBox
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            height: "60%",
+            width: "80%",
+            backdropFilter: "blur(60px)",
+            background: "transparent",
+            p: 4,
+          }}
+        >
+          <MDBox pt={4} pb={3} px={3}>
+            <MDBox component="form" role="form">
+              <MDBox mb={2}>
+                <Typography
+                  variant="h3"
+                  color="White"
+                  sx={{ textAlign: "center" }}
+                >
+                  Third Party Softwares
+                </Typography>
+              </MDBox>
+              <MDBox mb={2} sx={{ overflowY: "scroll", height: "28vh" }}>
+                {openSoftwareModal.content.length == 0
+                  ? null
+                  : openSoftwareModal.content.map((elem, i) => {
+                      return (
+                        <Typography variant="body1" color="White" key={i}>
+                          {elem}
+                        </Typography>
+                      );
+                    })}
+              </MDBox>
+              <MDBox mt={4} mb={1}>
+                <MDButton
+                  variant="gradient"
+                  // type="submit"
+                  color="info"
+                  fullWidth
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setOpenSoftwareModal({ state: false, content: "" });
+                  }}
+                >
+                  Close
+                </MDButton>
+              </MDBox>
+            </MDBox>
+          </MDBox>
+        </MDBox>
+      </Modal>
+
       <MDBox
         sx={{
           display: "flex",
@@ -139,9 +393,8 @@ const ReportPage = () => {
           justifyContent: "flex-start",
           position: "absolute",
           top: "10%",
-          left: "5%",
           height: "90%",
-          width: "90%",
+          width: "100%",
           overflowY: "auto",
           flexWrap: "wrap",
         }}
@@ -191,90 +444,185 @@ const ReportPage = () => {
                       marginLeft: "20px",
                       position: "relative",
                       // display: "flex",
-                      width: 300,
+                      // width: 300,
                       // height: 345,
                       transition: "all 0.2s ease-in",
                       ":hover": {
-                        cursor: "pointer",
                         transform: "scale(1.02)",
                         boxShadow: 8,
                       },
                     }}
                   >
-                    <CardActionArea
+                    {/* <CardActionArea
                       component={Link}
                       target="_blank"
                       to={`http://${Constants.SERVER_IP}:${Constants.SERVER_PORT}/view-report/${report.hardening_report_filename}`}
-                    >
-                      <CardContent>
-                        <Typography variant="h5" sx={{ color: "#ffffffaa" }}>
-                          Report {index + 1}
-                        </Typography>
-                        <Typography variant="body2" color="gray">
-                          {formatTimestamp(report.timestamp)}
-                        </Typography>
+                    > */}
+                    <CardContent>
+                      <Typography variant="h5" sx={{ color: "#ffffffaa" }}>
+                        Report {index + 1}
+                      </Typography>
+                      <Typography variant="body2" color="gray">
+                        {formatTimestamp(report.timestamp)}
+                      </Typography>
 
-                        <MDBox mt={2}>
-                          <MDBox>
-                            <Typography variant="body1" color="White">
-                              Open Ports
-                            </Typography>
-                            {report.open_ports.map((elem, i) => {
-                              return (
-                                <Typography
-                                  variant="body2"
-                                  color="white"
-                                  key={i}
-                                >
-                                  {elem}
-                                </Typography>
-                              );
-                            })}
-                          </MDBox>
-                          {[
-                            {
-                              label: "Patch Status",
-                              value: report.patch_status,
+                      <MDBox mt={2}>
+                        <MDBox
+                          sx={{
+                            backgroundColor: "#1E1E1E",
+                            color: "#fff",
+                            borderRadius: 3,
+                            boxShadow: 3,
+                            textAlign: "center",
+                            margin: "20px 10px 20px 10px",
+                            padding: "30px 30px 30px 30px",
+                            ":hover": {
+                              transform: "scale(1.02)",
+                              boxShadow: 8,
+                              cursor: "pointer",
                             },
-                            {
-                              label: "Antivirus Status",
-                              value: report.antivirus_status,
-                            },
-                            {
-                              label: "Encryption Status",
-                              value: report.encryption_status,
-                            },
-                            {
-                              label: "Password Strength",
-                              value: report.password_strength,
-                            },
-                            {
-                              label: "Plaintext Passwords",
-                              value: report.plaintext_passwords,
-                            },
-                          ].map((item, i) => (
-                            <Typography
-                              key={i}
-                              variant="body2"
-                              color="lightgray"
-                            >
-                              <strong>{item.label}:</strong> {item.value}
-                            </Typography>
-                          ))}
+                          }}
+                          onClick={(e) => {
+                            setOpenPortModal({
+                              content: report.open_ports,
+                              state: true,
+                            });
+                          }}
+                        >
+                          <Typography variant="body1" color="White">
+                            Open Ports
+                          </Typography>
+
+                          <Typography variant="body2" color="white">
+                            {report.open_ports.length}
+                          </Typography>
                         </MDBox>
 
+                        <MDBox
+                          sx={{
+                            backgroundColor: "#1E1E1E",
+                            color: "#fff",
+                            borderRadius: 3,
+                            boxShadow: 3,
+                            textAlign: "center",
+                            margin: "20px 10px 20px 10px",
+                            padding: "30px 30px 30px 30px",
+                            ":hover": {
+                              transform: "scale(1.02)",
+                              boxShadow: 8,
+                              cursor: "pointer",
+                            },
+                          }}
+                          onClick={(e) => {
+                            setOpenPatchModal({
+                              content: report.patch_status,
+                              state: true,
+                            });
+                          }}
+                        >
+                          <Typography variant="body1" color="White">
+                            Patch Status
+                          </Typography>
+
+                          <Typography
+                            variant="body2"
+                            color="white"
+                            sx={{
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              marginTop: "10px",
+                            }}
+                          >
+                            <FmdBadIcon
+                              sx={{
+                                fill: statusColor(report.patch_status),
+                                marginRight: "3px",
+                              }}
+                            />
+                            {report.patch_status}
+                          </Typography>
+                        </MDBox>
+
+                        <MDBox
+                          sx={{
+                            backgroundColor: "#1E1E1E",
+                            color: "#fff",
+                            borderRadius: 3,
+                            boxShadow: 3,
+                            textAlign: "center",
+                            margin: "20px 10px 20px 10px",
+                            padding: "30px 30px 30px 30px",
+                            ":hover": {
+                              transform: "scale(1.02)",
+                              boxShadow: 8,
+                              cursor: "pointer",
+                            },
+                          }}
+                          onClick={(e) => {
+                            setOpenSoftwareModal({
+                              content: report.third_party_software,
+                              state: true,
+                            });
+                          }}
+                        >
+                          <Typography variant="body1" color="White">
+                            Third Party Softwares
+                          </Typography>
+
+                          <Typography variant="body2" color="white">
+                            {report.third_party_software.length}
+                          </Typography>
+                        </MDBox>
+                        {[
+                          // {
+                          //   label: "Antivirus Status",
+                          //   value: report.antivirus_status,
+                          // },
+                          // {
+                          //   label: "Encryption Status",
+                          //   value: report.encryption_status,
+                          // },
+                          // {
+                          //   label: "Password Strength",
+                          //   value: report.password_strength,
+                          // },
+                          // {
+                          //   label: "Plaintext Passwords",
+                          //   value: report.plaintext_passwords,
+                          // },
+                        ].map((item, i) => (
+                          <Typography key={i} variant="body2" color="lightgray">
+                            <strong>{item.label}:</strong> {item.value}
+                          </Typography>
+                        ))}
+                      </MDBox>
+
+                      <Link
+                        target="_blank"
+                        to={`http://${Constants.SERVER_IP}:${Constants.SERVER_PORT}/view-report/${report.hardening_report_filename}`}
+                        sx={{
+                          ":hover": {
+                            cursor: "pointer",
+                          },
+                        }}
+                      >
                         <Typography
-                          variant="body1"
+                          variant="h2"
                           sx={{
                             marginTop: 2,
-                            fontSize: "0.9rem",
+                            fontSize: "1.5rem",
                             color: "#4CAF50",
+                            ":hover": {
+                              textDecoration: "underline",
+                            },
                           }}
                         >
                           Click to view Hardening report
                         </Typography>
-                      </CardContent>
-                    </CardActionArea>
+                      </Link>
+                    </CardContent>
+                    {/* </CardActionArea> */}
                   </Card>
                   // </Grid>
                 ))}
